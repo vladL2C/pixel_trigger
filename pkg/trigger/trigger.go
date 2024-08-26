@@ -55,8 +55,8 @@ func Init(config *Config) *trigger {
 func (t *trigger) Run() {
 	// start routines to do processing
 	go t.setKeyState()
-	go t.screenshot(t.screen.startX, t.screen.startY, t.screen.rectWidth, t.screen.rectHeight, t.captureScreen)
-	go t.scanImage(t.captureScreen, t.colorDetected)
+	go t.screenshot()
+	go t.scanImage()
 
 	for isDetected := range t.colorDetected {
 		if isDetected && t.config.IsKeyHeld {
@@ -66,17 +66,17 @@ func (t *trigger) Run() {
 	}
 }
 
-func (t *trigger) screenshot(startX, startY, rectWidth, rectHeight int, captureScreen chan *image.Image) {
+func (t *trigger) screenshot() {
 	for {
-		img := robotgo.CaptureImg(startX, startY, rectWidth, rectHeight)
-		captureScreen <- &img
+		img := robotgo.CaptureImg(t.screen.startX, t.screen.startY, rectWidth, rectHeight)
+		t.captureScreen <- &img
 		time.Sleep(8 * time.Millisecond)
 	}
 }
 
-func (t *trigger) scanImage(captures <-chan *image.Image, detector chan<- bool) {
-	for img := range captures {
-		detector <- t.detectTargetColor(img)
+func (t *trigger) scanImage() {
+	for img := range t.captureScreen {
+		t.colorDetected <- t.detectTargetColor(img)
 	}
 }
 
