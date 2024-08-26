@@ -40,7 +40,7 @@ type trigger struct {
 
 func Init() *trigger {
 	// Set the size of the rectangle
-	rectWidth, rectHeight := 5, 5 // Increase size for better visibility
+	rectWidth, rectHeight := 5, 5
 	screenWidth, screenHeight := robotgo.GetScreenSize()
 
 	// Calculate the center of the screen
