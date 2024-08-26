@@ -1,7 +1,6 @@
 package trigger
 
 import (
-	"fmt"
 	"image"
 	"time"
 
@@ -77,14 +76,10 @@ func (t *trigger) Run() {
 	go t.setKeyState()
 	go t.CaptureScreen(t.screen.startX, t.screen.startY, t.screen.rectWidth, t.screen.rectHeight, t.captureScreen)
 	go t.ScanImage(t.captureScreen, t.colorDetected)
-	for isRed := range t.colorDetected {
-		if isRed && t.config.isKeyHeld {
-			start := time.Now()
+	for isDetected := range t.colorDetected {
+		if isDetected && t.config.isKeyHeld {
 			robotgo.Click()
 			time.Sleep(14 * time.Millisecond)
-			elapsed := time.Since(start)
-
-			fmt.Println(fmt.Sprintf("elapsed time %v", elapsed))
 		}
 	}
 }
