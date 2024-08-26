@@ -42,7 +42,7 @@ to quickly create a Cobra application.`,
 		fmt.Printf("%s\n", logoStyle.Render(logo))
 		fmt.Printf("%s\n", logoStyle.Render("Running..."))
 		fmt.Printf("%s\n", logoStyle.Render("Press ctrl + c to exit"))
-		bot := trigger.Init()
+		bot := trigger.Init(nil)
 		bot.Run()
 	},
 }

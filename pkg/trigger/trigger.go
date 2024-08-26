@@ -9,16 +9,11 @@ import (
 	"github.com/vladl2c/pixel_trigger/pkg/color"
 )
 
-type config struct {
-	tolerence   uint32
-	targetColor string
-	triggerKey  int
-	isKeyHeld   bool
-}
-
-type screen struct {
-	rectWidth, rectHeight int
-	startX, startY        int
+type Config struct {
+	Tolerence   uint32
+	TargetColor string
+	TriggerKey  int
+	IsKeyHeld   bool
 }
 
 type Colorer interface {
@@ -26,41 +21,26 @@ type Colorer interface {
 }
 
 const (
+	// alt key
 	leftAltRawCode = 58
+	// screenshot size
+	rectWidth  = 5
+	rectHeight = 5
 )
 
 type trigger struct {
 	captureScreen chan *image.Image
 	colorDetected chan bool
 	screen        screen
-	config        *config
+	config        *Config
 	color         Colorer
 }
 
-func Init() *trigger {
-	// Set the size of the rectangle
-	rectWidth, rectHeight := 5, 5
-	screenWidth, screenHeight := robotgo.GetScreenSize()
+func Init(config *Config) *trigger {
+	screen := NewScreen()
 
-	// Calculate the center of the screen
-	centerX := (screenWidth / 2)
-	centerY := (screenHeight / 2)
-
-	// find top left corner from the middle of screen to draw square
-	startX := centerX - rectWidth/2
-	startY := centerY - rectHeight/2
-
-	screen := screen{
-		rectWidth:  rectWidth,
-		rectHeight: rectHeight,
-		startX:     startX,
-		startY:     startY,
-	}
-
-	config := &config{
-		tolerence:   80,
-		targetColor: "red",
-		triggerKey:  leftAltRawCode,
+	if config == nil {
+		config = GenerateDefaultConfig()
 	}
 
 	return &trigger{
@@ -73,33 +53,35 @@ func Init() *trigger {
 }
 
 func (t *trigger) Run() {
+	// start routines to do processing
 	go t.setKeyState()
-	go t.CaptureScreen(t.screen.startX, t.screen.startY, t.screen.rectWidth, t.screen.rectHeight, t.captureScreen)
-	go t.ScanImage(t.captureScreen, t.colorDetected)
+	go t.screenshot(t.screen.startX, t.screen.startY, t.screen.rectWidth, t.screen.rectHeight, t.captureScreen)
+	go t.scanImage(t.captureScreen, t.colorDetected)
+
 	for isDetected := range t.colorDetected {
-		if isDetected && t.config.isKeyHeld {
+		if isDetected && t.config.IsKeyHeld {
 			robotgo.Click()
-			time.Sleep(14 * time.Millisecond)
+			time.Sleep(15 * time.Millisecond)
 		}
 	}
 }
 
-func (t *trigger) CaptureScreen(startX, startY, rectWidth, rectHeight int, captureScreen chan *image.Image) {
+func (t *trigger) screenshot(startX, startY, rectWidth, rectHeight int, captureScreen chan *image.Image) {
 	for {
 		img := robotgo.CaptureImg(startX, startY, rectWidth, rectHeight)
 		captureScreen <- &img
+		time.Sleep(8 * time.Millisecond)
 	}
 }
 
-func (t *trigger) ScanImage(screnshotCh chan *image.Image, hasRed chan bool) {
-
-	for img := range screnshotCh {
-		hasRed <- t.scanImage(img)
+func (t *trigger) scanImage(captures <-chan *image.Image, detector chan<- bool) {
+	for img := range captures {
+		detector <- t.detectTargetColor(img)
 	}
 }
 
-// scanImageForRed scans the image for any red pixels
-func (t *trigger) scanImage(img *image.Image) bool {
+// scanImage scans the image checks target
+func (t *trigger) detectTargetColor(img *image.Image) bool {
 	// Get image bounds
 	bounds := (*img).Bounds()
 
@@ -114,29 +96,28 @@ func (t *trigger) scanImage(img *image.Image) bool {
 
 			// Normalize to 8-bit color values
 			r8, g8, b8 := r>>8, g>>8, b>>8
-			// Check if the pixel is "red"
+			// Check if the pixel is target color
 			if t.isTarget(r8, g8, b8) {
 				return true
 			}
 		}
 	}
 
-	// No red color found
+	// No color found
 	return false
 }
 
-// isRed checks if the given RGB values correspond to a red color
 func (t *trigger) isTarget(r, g, b uint32) bool {
-	// Define target color for red and tolerance
-	targetR, targetG, targetB := t.color.GetColor(t.config.targetColor)
-	tolerance := t.config.tolerence
+	// Define target color and tolerance
+	targetR, targetG, targetB := t.color.GetColor(t.config.TargetColor)
+	tolerance := t.config.Tolerence
 
 	// Check if each color component is within tolerance of the target color
 	rMatch := (r >= targetR-tolerance) && (r <= targetR+tolerance)
 	gMatch := (g >= targetG-tolerance) && (g <= targetG+tolerance)
 	bMatch := (b >= targetB-tolerance) && (b <= targetB+tolerance)
 
-	// Return true if the color matches the red color within tolerance
+	// Return true if the color matches the color within tolerance
 	return rMatch && !gMatch && !bMatch
 }
 
@@ -148,11 +129,11 @@ func (t *trigger) setKeyState() {
 		switch e.Kind {
 		case gohook.KeyHold, gohook.KeyDown:
 			if e.Rawcode == leftAltRawCode {
-				t.config.isKeyHeld = true
+				t.config.IsKeyHeld = true
 			}
 		case gohook.KeyUp:
 			if e.Rawcode == leftAltRawCode {
-				t.config.isKeyHeld = false
+				t.config.IsKeyHeld = false
 			}
 		}
 
