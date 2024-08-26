@@ -82,21 +82,16 @@ func (t *trigger) scanImage(captures <-chan *image.Image, detector chan<- bool) 
 
 // scanImage scans the image checks target
 func (t *trigger) detectTargetColor(img *image.Image) bool {
-	// Get image bounds
 	bounds := (*img).Bounds()
 
 	// Iterate over each pixel in the image
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 		for x := bounds.Min.X; x < bounds.Max.X; x++ {
-			// Get the color of the pixel at (x, y)
 			c := (*img).At(x, y)
-
-			// Convert color to RGBA format
 			r, g, b, _ := c.RGBA()
-
 			// Normalize to 8-bit color values
 			r8, g8, b8 := r>>8, g>>8, b>>8
-			// Check if the pixel is target color
+
 			if t.isTarget(r8, g8, b8) {
 				return true
 			}
