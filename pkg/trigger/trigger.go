@@ -22,7 +22,7 @@ type Colorer interface {
 
 const (
 	// alt key
-	leftAltRawCode = 58
+	leftAltRawCode = 162
 	// screenshot size
 	rectWidth  = 5
 	rectHeight = 5
