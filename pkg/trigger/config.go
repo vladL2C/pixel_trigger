@@ -1,7 +1,7 @@
 package trigger
 
 const (
-	tolerence   = 80
+	tolerence   = 50
 	targetColor = "red"
 )
 

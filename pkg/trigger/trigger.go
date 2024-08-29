@@ -22,7 +22,7 @@ type Colorer interface {
 
 const (
 	// alt key
-	leftAltRawCode = 162
+	leftAltRawCode = 88
 	// screenshot size
 	rectWidth  = 5
 	rectHeight = 5
@@ -60,8 +60,7 @@ func (t *trigger) Run() {
 
 	for isDetected := range t.colorDetected {
 		if isDetected && t.config.IsKeyHeld {
-			robotgo.Click()
-			time.Sleep(15 * time.Millisecond)
+			robotgo.KeyPress("k")
 		}
 	}
 }
