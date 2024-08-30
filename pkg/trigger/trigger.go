@@ -2,11 +2,18 @@ package trigger
 
 import (
 	"image"
+
+	"syscall"
 	"time"
 
 	"github.com/go-vgo/robotgo"
-	gohook "github.com/robotn/gohook"
 	"github.com/vladl2c/pixel_trigger/pkg/color"
+)
+
+var (
+	user32               = syscall.NewLazyDLL("user32.dll")
+	procGetAsyncKeyState = user32.NewProc("GetAsyncKeyState")
+	VK_XBUTTON1          = 0x05
 )
 
 type Config struct {
@@ -54,12 +61,11 @@ func Init(config *Config) *trigger {
 
 func (t *trigger) Run() {
 	// start routines to do processing
-	go t.setKeyState()
 	go t.screenshot()
 	go t.scanImage()
 
 	for isDetected := range t.colorDetected {
-		if isDetected && t.config.IsKeyHeld {
+		if isDetected && GetAsyncKeyState(VK_XBUTTON1) {
 			robotgo.KeyPress("k")
 		}
 	}
@@ -115,21 +121,7 @@ func (t *trigger) isTarget(r, g, b uint32) bool {
 	return rMatch && !gMatch && !bMatch
 }
 
-func (t *trigger) setKeyState() {
-	eventHook := gohook.Start()
-	var e gohook.Event
-
-	for e = range eventHook {
-		switch e.Kind {
-		case gohook.KeyHold, gohook.KeyDown, gohook.MouseDown, gohook.MouseHold:
-			if e.Button == 4 {
-				t.config.IsKeyHeld = true
-			}
-		case gohook.KeyUp, gohook.MouseUp:
-			if e.Button == 4 {
-				t.config.IsKeyHeld = false
-			}
-		}
-
-	}
+func GetAsyncKeyState(vk int) bool {
+	ret, _, _ := procGetAsyncKeyState.Call(uintptr(vk))
+	return ret != 0
 }

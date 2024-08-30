@@ -27,7 +27,6 @@ require (
 	github.com/otiai10/mint v1.6.3 // indirect
 	github.com/power-devops/perfstat v0.0.0-20221212215047-62379fc7944b // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
-	github.com/robotn/gohook v0.41.0
 	github.com/robotn/xgb v0.0.0-20190912153532-2cb92d044934 // indirect
 	github.com/robotn/xgbutil v0.0.0-20190912154524-c861d6f87770 // indirect
 	github.com/shirou/gopsutil/v4 v4.24.5 // indirect
