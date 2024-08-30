@@ -1,7 +1,6 @@
 package trigger
 
 import (
-	"fmt"
 	"image"
 	"time"
 
@@ -121,7 +120,6 @@ func (t *trigger) setKeyState() {
 	var e gohook.Event
 
 	for e = range eventHook {
-		fmt.Printf("WTF IS THIS %v %v %v \n ", e.Rawcode, e, e.Button)
 		switch e.Kind {
 		case gohook.KeyHold, gohook.KeyDown, gohook.MouseDown, gohook.MouseHold:
 			if e.Button == 4 {
